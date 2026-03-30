@@ -38,7 +38,7 @@ const elements = {
     }
 
   }
-const key = 'AIzaSyBaYit0BcZYmdAxk5RaOHzYOPSNcRvei3g'
+const key = import.meta.env.VITE_GEMINI_KEY
 
 const ai = new GoogleGenAI({ apiKey: key });
 
