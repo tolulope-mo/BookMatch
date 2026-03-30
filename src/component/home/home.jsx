@@ -38,9 +38,9 @@ const elements = {
     }
 
   }
-const key = import.meta.env.VITE_GEMINI_KEY
+// const key = import.meta.env.VITE_GEMINI_KEY
 
-const ai = new GoogleGenAI({ apiKey: key });
+// const ai = new GoogleGenAI({ apiKey: key });
 
 function Home () {
 
@@ -67,25 +67,46 @@ function Home () {
 
     try {
 
-    const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents:
-      `Recommend 5 books. Return the response as a JSON array.
-      Each item MUST  compulsorily have:
-      - title
-      - author
-      - yearPublished
-      - about
+    // const response = await ai.models.generateContent({
+    // model: "gemini-3-flash-preview",
+    // contents:
+    //   `Recommend 5 books. Return the response as a JSON array.
+    //   Each item MUST  compulsorily have:
+    //   - title
+    //   - author
+    //   - yearPublished
+    //   - about
 
-      Genre: ${state.genre}
-      Mood: ${state.mood}
-      Length: ${state.length}
-      `
-    });
+    //   Genre: ${state.genre}
+    //   Mood: ${state.mood}
+    //   Length: ${state.length}
+    //   `
+    // });
 
-    const dataFromAi = JSON.parse(response.text)
-    setData(dataFromAi)
-    setDataFetched(true)
+    // const dataFromAi = JSON.parse(response.text)
+    // setData(dataFromAi)
+    // setDataFetched(true)
+
+      const res = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: `Recommend 5 books. Return the response as a JSON array.
+    Each item MUST compulsorily have:
+    - title
+    - author
+    - yearPublished
+    - about
+
+    Genre: ${state.genre}
+    Mood: ${state.mood}
+    Length: ${state.length}`
+        })
+      });
+
+      const dataFromAi = await res.json();
+      setData(dataFromAi);
+
   }
   
   catch (err) {
