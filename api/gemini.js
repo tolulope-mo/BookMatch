@@ -1,32 +1,36 @@
+import { GoogleGenAI } from "@google/genai";
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-
-    const GEMINI_KEY = process.env.VITE_GEMINI_KEY;
-
-    if (!GEMINI_KEY) {
-      return res.status(500).json({ error: 'API key not set' });
-    }
-
-    const body = req.body; 
-
-    const response = await fetch('https://api.gemini.ai/v1/endpoint', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GEMINI_KEY}`,
-      },
-      body: JSON.stringify(body),
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_KEY,
     });
 
-    const data = await response.json();
-    return res.status(200).json(data);
+    const { prompt } = req.body;
+
+    const result = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: prompt,
+    });
+
+    let text = result.text;
+
+    const match = text.match(/\[.*\]/s);
+
+    if (!match) {
+      return res.status(500).json({ error: "Invalid AI response" });
+    }
+
+    const parsed = JSON.parse(match[0]);
+
+    return res.status(200).json(parsed);
 
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Something went wrong' });
+    return res.status(500).json({ error: "Server error" });
   }
 }

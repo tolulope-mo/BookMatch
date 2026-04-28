@@ -9,6 +9,7 @@ import Book1 from '../../images/book1.png'
 import Book2 from '../../images/book2.png'
 import Book3 from '../../images/book3.png'
 
+import axios from 'axios'
 
 const elements = {
   genre: '',
@@ -38,11 +39,9 @@ function reducer(state, action) {
   }
 
 }
-// const key = import.meta.env.VITE_GEMINI_KEY
 
-// const ai = new GoogleGenAI({ apiKey: key });
 
-function Home() {
+function Home2() {
 
   const [state, dispatch] = useReducer(reducer, elements)
 
@@ -54,51 +53,48 @@ function Home() {
 
   const [err, setErr] = useState(false)
 
-  async function fetchBook() {
-    if (!state.genre || !state.mood || !state.length) {
+async function fetchBook() {
+  if (!state.genre || !state.mood || !state.length) {
+    setErr(true);
+    return;
+  }
+
+  setErr(false);
+  setIsLoading(true);
+
+  try {
+    const res = await axios.post("/api/gemini", {
+      prompt: `Recommend 5 books. Return ONLY a valid JSON array.
+
+Each item MUST have:
+- title
+- author
+- yearPublished
+- about
+
+Genre: ${state.genre}
+Mood: ${state.mood}
+Length: ${state.length}`
+    });
+
+    const dataFromAi = res.data;
+
+    if (!Array.isArray(dataFromAi)) {
+      console.error("API did not return an array:", dataFromAi);
       setErr(true);
       return;
     }
 
-    setErr(false);
-    setIsLoading(true);
+    setData(dataFromAi);
+    setDataFetched(true);
 
-    try {
-      const res = await fetch("/api/gemini", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: `Recommend 5 books. Return the response as a JSON array.
-        Each item MUST compulsorily have:
-        - title
-        - author
-        - yearPublished
-        - about
-
-        Genre: ${state.genre}
-        Mood: ${state.mood}
-        Length: ${state.length}`
-        }),
-      });
-
-      const dataFromAi = await res.json();
-
-      if (!Array.isArray(dataFromAi)) {
-        console.error("API did not return an array:", dataFromAi);
-        setErr(true);
-        setIsLoading(false);
-        return;
-      }
-
-      setData(dataFromAi);
-      setDataFetched(true);
-    } catch (err) {
-      console.error("Error calling Gemini:", err);
-      setErr(true);
-    } finally {
-      setIsLoading(false);
-    }
+  } catch (error) {
+    console.error("Error calling Gemini:", error.response?.data || error.message);
+    setErr(true);
+  } finally {
+    setIsLoading(false);
   }
+}
 
   
 
@@ -177,4 +173,4 @@ function Home() {
 
 }
 
-export default Home
+export default Home2
